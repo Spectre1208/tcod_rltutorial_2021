@@ -18,19 +18,19 @@ class GameMap:
         The following buffer code is a temporary implementation to prevent the out-of-bounds viewport errors
         until I find a more elegant way to fix it. Might be better to implement something in the in_bounds function.
         """
-        buffer_x = int(view_width/2)
-        buffer_y = int(view_height/2)
-        self.map_tiles = np.full((map_width + 2*buffer_x, map_height + 2*buffer_y), fill_value=tile_types.floor,
+        self.buffer_x = int(view_width/2)
+        self.buffer_y = int(view_height/2)
+        self.map_tiles = np.full((map_width + 2*self.buffer_x, map_height + 2*self.buffer_y), fill_value=tile_types.floor,
                                  order="F")
 
         #  Walling off the buffer zone so the player can't stray.....
-        self.map_tiles[buffer_x:buffer_x+self.map_width, buffer_y] = tile_types.wall
-        self.map_tiles[buffer_x:buffer_x+self.map_width, buffer_y+self.map_height] = tile_types.wall
-        self.map_tiles[buffer_x, buffer_y:buffer_y + self.map_height] = tile_types.wall
-        self.map_tiles[buffer_x+self.map_width, buffer_y:buffer_y + self.map_height] = tile_types.wall
+        # self.map_tiles[self.buffer_x:self.buffer_x+self.map_width, self.buffer_y] = tile_types.wall
+        # self.map_tiles[self.buffer_x:self.buffer_x+self.map_width, self.buffer_y+self.map_height] = tile_types.wall
+        # self.map_tiles[self.buffer_x, self.buffer_y:self.buffer_y + self.map_height] = tile_types.wall
+        # self.map_tiles[self.buffer_x+self.map_width, self.buffer_y:self.buffer_y + self.map_height] = tile_types.wall
 
         # Temp wall:
-        self.map_tiles[buffer_x+60:buffer_x+100, buffer_y+22] = tile_types.wall
+        self.map_tiles[self.buffer_x+60:self.buffer_x+100, self.buffer_y+22] = tile_types.wall
 
         #  This will probably break pretty quickly. Also, apparently this is a numpy "view" not "copy",
         #  which is something to keep in mind..
@@ -39,8 +39,8 @@ class GameMap:
 
     def in_bounds(self, x: int, y: int) -> bool:  # This is broken
         """Return True if x and y are inside of the bounds of the map."""
-        #  return 0 <= x < self.map_width and 0 <= y < self.map_height
-        return True
+        return self.buffer_x <= x < self.buffer_x + self.map_width and self.buffer_y <= y < self.buffer_y + \
+               self.map_height
 
     def scroll_viewport(self, dx: int, dy: int) -> None:
         """
