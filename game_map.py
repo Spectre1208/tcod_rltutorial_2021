@@ -6,12 +6,12 @@ import tile_types
 
 
 class GameMap:
-    def __init__(self, map_width: int, map_height: int, view_width: int, view_height: int,
-                 player_x: int, player_y: int):
+    def __init__(self, map_width: int, map_height: int, view_width: int, view_height: int):
         self.map_width, self.map_height = map_width, map_height
         self.view_width, self.view_height = view_width, view_height
-        self.viewport_origin_x = int(player_x - self.view_width/2)
-        self.viewport_origin_y = int(player_y - self.view_height/2 + 1)
+        # Initialize the viewport at the center of the map. This will be overridden later.
+        self.viewport_origin_x = int(map_width/2 - self.view_width/2)
+        self.viewport_origin_y = int(map_height/2 - self.view_height/2 + 1)
         # ^The +1 is sort of a hack fix for issues that arise from the division when defining the viewport origin based
         # on the player position.
         """
@@ -20,20 +20,18 @@ class GameMap:
         """
         self.buffer_x = int(view_width/2)
         self.buffer_y = int(view_height/2)
-        self.map_tiles = np.full((map_width + 2*self.buffer_x, map_height + 2*self.buffer_y), fill_value=tile_types.floor,
-                                 order="F")
+        self.map_tiles = np.full((map_width + view_width, map_height + view_height),
+                                 fill_value=tile_types.wall, order="F")
 
-        #  Walling off the buffer zone so the player can't stray.....
-        # self.map_tiles[self.buffer_x:self.buffer_x+self.map_width, self.buffer_y] = tile_types.wall
-        # self.map_tiles[self.buffer_x:self.buffer_x+self.map_width, self.buffer_y+self.map_height] = tile_types.wall
-        # self.map_tiles[self.buffer_x, self.buffer_y:self.buffer_y + self.map_height] = tile_types.wall
-        # self.map_tiles[self.buffer_x+self.map_width, self.buffer_y:self.buffer_y + self.map_height] = tile_types.wall
+        #  Current viewport implementation. Keep in mind that this is a "view" and not a "copy":
+        self.viewport_tiles = self.map_tiles[self.viewport_origin_x:self.viewport_origin_x + self.view_width,
+                                             self.viewport_origin_y:self.viewport_origin_y + self.view_height]
 
-        # Temp wall:
-        self.map_tiles[self.buffer_x+60:self.buffer_x+100, self.buffer_y+22] = tile_types.wall
-
-        #  This will probably break pretty quickly. Also, apparently this is a numpy "view" not "copy",
-        #  which is something to keep in mind..
+    def focus_viewport(self, player_x: int, player_y: int):
+        """Recalculates viewport origin based on new player coordinates. Maybe I should just call this
+        whenever MovementActions are performed?"""
+        self.viewport_origin_x = int(player_x - self.view_width / 2)
+        self.viewport_origin_y = int(player_y - self.view_height / 2 + 1)
         self.viewport_tiles = self.map_tiles[self.viewport_origin_x:self.viewport_origin_x + self.view_width,
                                              self.viewport_origin_y:self.viewport_origin_y + self.view_height]
 

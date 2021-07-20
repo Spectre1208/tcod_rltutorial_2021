@@ -35,14 +35,15 @@ class Engine:
         all times.
         """
         for entity in self.entities:
-            if entity.isplayer:
-                console.print(int(self.game_map.view_width/2), int(self.game_map.view_height/2), entity.char,
-                              fg=entity.color)
-            else:
-                view_x = entity.map_x - self.game_map.viewport_origin_x
-                view_y = entity.map_y - self.game_map.viewport_origin_y
-                if (0 <= view_x < self.game_map.view_width) and (0 <= view_y < self.game_map.view_height):
-                    console.print(view_x, view_y, entity.char, fg=entity.color)
+            # if entity.isplayer:
+            #     player_x = int(self.game_map.view_width/2)
+            #     player_y = int(self.game_map.view_height/2)
+            #     console.print(player_x, player_y, entity.char, fg=entity.color)
+            # else:
+            view_x = entity.map_x - self.game_map.viewport_origin_x
+            view_y = entity.map_y - self.game_map.viewport_origin_y
+            if (0 <= view_x < self.game_map.view_width) and (0 <= view_y < self.game_map.view_height):
+                console.print(view_x, view_y, entity.char, fg=entity.color)
 
         context.present(console)
 
