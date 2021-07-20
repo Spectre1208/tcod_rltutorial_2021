@@ -59,6 +59,21 @@ My implementation of Part 3 does not differ from the tutorial too much. Most of 
 ended up being due to typos when copying the code from the tutorial (I was tired), and making sure the procedurally 
 generated dungeon played nice with my viewport code. 
 
+### Week 3: 
+
+Almost caught up!
+
+Link to reddit post: https://www.reddit.com/r/roguelikedev/comments/oj8ke8/roguelikedev_does_the_complete_roguelike_tutorial/
+
 #### Part 4:
+
+Part 4 went pretty smoothly. I did not deviate from the tutorial much on this one, just once again making sure that
+the FOV code implemented here played nice with my viewport code. At first, I thought I might have an issue with the
+addition of the "visible" and "explored" matrices. These are defined as the same size of the game map matrix, so I just
+had to make sure that my buffer zone was accounted for and that they mapped well to the viewport. Some tweaking to my
+game_map initialization code ensured that the buffer zone was included, and my solution to the viewport mapping was to
+go ahead and just create a new "viewport" matrix for each of the new matrices. Everytime the primary viewport is updated,
+the other viewports are updated as well. Eventually I would like it if maybe all this data could be carried by just one
+matrix, but this works for the time being. 
 
 

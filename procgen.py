@@ -78,8 +78,8 @@ def generate_dungeon(
         room_width = random.randint(room_min_size, room_max_size)
         room_height = random.randint(room_min_size, room_max_size)
 
-        x = random.randint(dungeon.buffer_x, dungeon.buffer_x + dungeon.map_width - room_width - 1)
-        y = random.randint(dungeon.buffer_y, dungeon.buffer_y + dungeon.map_height - room_height - 1)
+        x = random.randint(dungeon.buffer_x, dungeon.map_width - dungeon.buffer_x - room_width - 1)
+        y = random.randint(dungeon.buffer_y, dungeon.map_height - dungeon.buffer_y - room_height - 1)
 
         # "RectangularRoom" class makes rectangles easier to work with
         new_room = RectangularRoom(x, y, room_width, room_height)
