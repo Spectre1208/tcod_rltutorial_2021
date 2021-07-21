@@ -1,12 +1,20 @@
+from __future__ import annotations
+
+from typing import Iterable, Optional, TYPE_CHECKING
+
 import numpy as np  # type: ignore
 
 from tcod.console import Console
 
 import tile_types
 
+if TYPE_CHECKING:
+    from entity import Entity
+
 
 class GameMap:
-    def __init__(self, map_width: int, map_height: int, view_width: int, view_height: int):
+    def __init__(self, map_width: int, map_height: int, view_width: int, view_height: int, entities: Iterable[Entity] = ()):
+        self.entities = set(entities)
         """
         The following buffer code is a temporary implementation to prevent the out-of-bounds viewport errors
         until I find a more elegant way to fix it. Might be better to implement something in the in_bounds function.
@@ -54,6 +62,13 @@ class GameMap:
         self.explored_vp = self.explored[self.viewport_origin_x:self.viewport_origin_x + self.view_width,
                                          self.viewport_origin_y:self.viewport_origin_y + self.view_height]
 
+    def get_blocking_entity_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
+        for entity in self.entities:
+            if entity.blocks_movement and entity.map_x == location_x and entity.map_y == location_y:
+                return entity
+
+        return None
+
     def in_bounds(self, x: int, y: int) -> bool:  # This is broken
         """Return True if x and y are inside of the bounds of the map."""
         return self.buffer_x <= x < self.buffer_x + self.map_width and self.buffer_y <= y < self.buffer_y + \
@@ -89,3 +104,17 @@ class GameMap:
             choicelist=[self.viewport_tiles["light"], self.viewport_tiles["dark"]],
             default=tile_types.SHROUD
         )
+
+        """
+        The following calculates the viewport coordinates for each entity, checks to make sure that
+        the coordinates are actually within the current viewport, and then prints them to the viewport.
+        For now, the player entity is excluded from this and is printed to the center of the viewport at 
+        all times.
+        """
+        for entity in self.entities:
+            # Only print entities that are in the FOV.
+            if self.visible[entity.map_x, entity.map_y]:
+                view_x = entity.map_x - self.viewport_origin_x
+                view_y = entity.map_y - self.viewport_origin_y
+                if (0 <= view_x < self.view_width) and (0 <= view_y < self.view_height):
+                    console.print(x=view_x, y=view_y, string=entity.char, fg=entity.color)

@@ -76,4 +76,8 @@ go ahead and just create a new "viewport" matrix for each of the new matrices. E
 the other viewports are updated as well. Eventually I would like it if maybe all this data could be carried by just one
 matrix, but this works for the time being. 
 
+#### Part 5:
 
+Part 5 also went smoothly. I did not deviate from the tutorial here either, however I am nearing decision time on what
+exactly the theme of this game is going to be. I'm going to kick that can down the road though, since I'm just trying to
+catch up with the tutorial event at this point. 
