@@ -11,6 +11,7 @@ import tile_types
 
 if TYPE_CHECKING:
     from entity import Entity
+    from engine import Engine
 
 
 class RectangularRoom:
@@ -84,10 +85,11 @@ def generate_dungeon(
         view_width: int,
         view_height: int,
         max_monsters_per_room: int,
-        player: Entity
+        engine: Engine,
 ) -> GameMap:
     """Generate a new dungeon map."""
-    dungeon = GameMap(map_width, map_height, view_width, view_height, entities=[player])
+    player = engine.player
+    dungeon = GameMap(engine, map_width, map_height, view_width, view_height, entities=[player])
 
     rooms: List[RectangularRoom] = []
 
@@ -111,7 +113,7 @@ def generate_dungeon(
 
         if len(rooms) == 0:
             # The first room, where the player starts.
-            player.map_x, player.map_y = new_room.center
+            player.place(*new_room.center, dungeon)
             # Need to refocus the viewport now.
             dungeon.focus_viewport(player.map_x, player.map_y)
         else:  # All rooms after the first.

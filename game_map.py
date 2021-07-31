@@ -1,19 +1,25 @@
 from __future__ import annotations
 
-from typing import Iterable, Optional, TYPE_CHECKING
+from typing import Iterable, Optional, TYPE_CHECKING, Iterator
 
 import numpy as np  # type: ignore
 
 from tcod.console import Console
 
+from entity import Actor
 import tile_types
 
 if TYPE_CHECKING:
+    from engine import Engine
     from entity import Entity
 
 
 class GameMap:
-    def __init__(self, map_width: int, map_height: int, view_width: int, view_height: int, entities: Iterable[Entity] = ()):
+    def __init__(
+            self, engine: Engine, map_width: int, map_height: int, view_width: int, view_height: int,
+            entities: Iterable[Entity] = ()
+    ):
+        self.engine = engine
         self.entities = set(entities)
         """
         The following buffer code is a temporary implementation to prevent the out-of-bounds viewport errors
@@ -36,10 +42,13 @@ class GameMap:
         self.viewport_tiles = self.map_tiles[self.viewport_origin_x:self.viewport_origin_x + self.view_width,
                                              self.viewport_origin_y:self.viewport_origin_y + self.view_height]
 
-        # Tiles the player can currently see
-        self.visible = np.full((self.map_width, self.map_height), fill_value=False, order="F")
-        # Tiles the player has seen before
-        self.explored = np.full((self.map_width, self.map_height), fill_value=False, order="F")
+        self.visible = np.full(
+            (self.map_width, self.map_height), fill_value=False, order="F"
+        )  # Tiles the player can currently see
+
+        self.explored = np.full(
+            (self.map_width, self.map_height), fill_value=False, order="F"
+        )  # Tiles the player has seen before
 
         """
         For now, creating separate "viewports" for the visible and explored matrices. It would be nice to add this to
@@ -49,6 +58,15 @@ class GameMap:
                                        self.viewport_origin_y:self.viewport_origin_y + self.view_height]
         self.explored_vp = self.explored[self.viewport_origin_x:self.viewport_origin_x + self.view_width,
                                          self.viewport_origin_y:self.viewport_origin_y + self.view_height]
+
+    @property
+    def actors(self) -> Iterator[Actor]:
+        """Iterate over this map's living actors"""
+        yield from (
+            entity
+            for entity in self.entities
+            if isinstance(entity, Actor) and entity.is_alive
+        )
 
     def focus_viewport(self, player_x: int, player_y: int):
         """Recalculates viewport origin based on new player coordinates. Maybe I should just call this
@@ -64,8 +82,19 @@ class GameMap:
 
     def get_blocking_entity_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
         for entity in self.entities:
-            if entity.blocks_movement and entity.map_x == location_x and entity.map_y == location_y:
+            if (
+                entity.blocks_movement
+                and entity.map_x == location_x
+                and entity.map_y == location_y
+            ):
                 return entity
+
+        return None
+
+    def get_actor_at_location(self, x: int, y: int) -> Optional[Actor]:
+        for actor in self.actors:
+            if actor.map_x == x and actor.map_y == y:
+                return actor
 
         return None
 
@@ -99,19 +128,22 @@ class GameMap:
         If it isn't, but it's in the "explored" array, then draw it with the "dark" colors.
         Otherwise, the default is "SHROUD".
         """
-        console.tiles_rgb[0:self.view_width, 0:self.view_height] = np.select(
+        console.tiles_rgb[0 : self.view_width, 0 : self.view_height] = np.select(
             condlist=[self.visible_vp, self.explored_vp],
             choicelist=[self.viewport_tiles["light"], self.viewport_tiles["dark"]],
             default=tile_types.SHROUD
         )
 
+        entities_sorted_for_rendering = sorted(
+            self.entities, key=lambda x: x.render_order.value
+        )
+
         """
         The following calculates the viewport coordinates for each entity, checks to make sure that
         the coordinates are actually within the current viewport, and then prints them to the viewport.
-        For now, the player entity is excluded from this and is printed to the center of the viewport at 
-        all times.
+        
         """
-        for entity in self.entities:
+        for entity in entities_sorted_for_rendering:
             # Only print entities that are in the FOV.
             if self.visible[entity.map_x, entity.map_y]:
                 view_x = entity.map_x - self.viewport_origin_x
